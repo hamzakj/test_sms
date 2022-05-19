@@ -37,8 +37,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<Number> numbers = [];
   List<String> nums = [];
+  List<String> content = [];
   int x = 0;
   void getNumbers() {
+    int count = -1;
     List<Number> tmpList = [];
     ref.child('users').onChildAdded.listen((event) {
       x++;
@@ -47,34 +49,30 @@ class _MyHomePageState extends State<MyHomePage> {
       if (!event.snapshot.exists) {
         return;
       }
-
-      //print(event.snapshot.value);
-      print(number.number + x.toString());
-
       tmpList.add(number);
-      nums.add(number.number + x.toString());
-
+      nums.add(number.number);
+      content.add(number.content);
       setState(() {
         numbers = tmpList;
       });
-      if (x == 101) {
-        sendSms(nums).then((value) => null);
+      //  print(numbers.last.number.toString());
+      if (numbers.last.number.isNotEmpty) {
+        if (numbers.last.number.length < 6) {
+          count = int.parse(numbers.last.number);
+        }
+        print("x=$x - count = ${count + 1}");
+        sendSms(nums, content).then((value) => null);
+        if (count + 1 == x) {
+          count = -1;
+          x = 0;
+        }
       }
-      // noteList = noteList.toSet().toList();
-      // findNote = noteList;
     });
   }
 
-  // Future sendSms(String num, content) async {
-  //   var rc = const MethodChannel("sms");
-  //   await rc.invokeMethod("sendSMS", [
-  //     {'number': num, 'content': content}
-  //   ]);
-  // }
-
-  Future sendSms(List<String> list) async {
+  Future sendSms(List<String> list, List<String> content) async {
     var rc = const MethodChannel("sms");
-    await rc.invokeMethod("sendSMS", list);
+    await rc.invokeMethod("sendSMS", {"nums": list, "contents": content});
   }
 
   @override
